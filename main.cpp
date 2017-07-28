@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QStringList>
+#include <QProcess>
 #include <iostream>
 #include <fstream>
 #include <QDebug>
@@ -74,54 +75,106 @@ int main(int argc, char *argv[])
 
         allText = instream.readAll();
         hFile.close();
-    }
-    lineList = allText.split("\n");
-    int inputLine1 = 0, inputLine2 = 0, inputLine3 = 0;
-    for(int i = 0; i < lineList.count();i++){
-        searchLine = lineList.at(i);
-        if(searchLine.contains(inputInfo1.at(1))){
-            inputLine1 = i;
-            line1 = searchLine.split("\t");
+
+        QFile copyFile("hpdata.hpdm");
+        copyFile.copy("phdata_copy.hpdm");
+
+        QFile deleteFile("hpdata.hpdm");
+        deleteFile.remove();
+
+        QFile newFile("hpdata.hpdm");
+        QTextStream writeStream;
+
+        lineList = allText.split("\n");
+        int inputLine1 = 0, inputLine2 = 0, inputLine3 = 0;
+        for(int i = 0; i < lineList.count();i++){
+            searchLine = lineList.at(i);
+            if(searchLine.contains(inputInfo1.at(1))){
+                inputLine1 = i;
+                line1 = searchLine.split("\t");
+            }
+            else if(searchLine.contains(inputInfo2.at(1))){
+                inputLine2 = i;
+                line2 = searchLine.split("\t");
+            }
+            else if(searchLine.contains(inputInfo3.at(1))){
+                inputLine3 = i;
+                line3 = searchLine.split("\t");
+            }
         }
-        else if(searchLine.contains(inputInfo2.at(1))){
-            inputLine2 = i;
-            line2 = searchLine.split("\t");
+        if(inputLine1 * inputLine2 * inputLine3 == 0){
+//            qDebug()<<"failed to find input line"
+//                   <<inputLine1<<inputLine2<<inputLine3;
+            return 0;
         }
-        else if(searchLine.contains(inputInfo3.at(1))){
-            inputLine3 = i;
-            line3 = searchLine.split("\t");
+        else{
+
+//            qDebug()<<"found input line"
+//                   <<inputLine1<<inputLine2<<inputLine3;
         }
-    }
-    if(inputLine1 * inputLine2 * inputLine3 == 0){
-        qDebug()<<"failed to find input line"
-               <<inputLine1<<inputLine2<<inputLine3;
-    }
-    else{
 
-        qDebug()<<"found input line"
-               <<inputLine1<<inputLine2<<inputLine3;
-    }
+        //replace parameter in .hpdm file and run calculation
+        for(int o = 0; o < run1; o++){
 
-    //replace parameter in .hpdm file and run calculation
-    for(int o = 0; o < run1; o++){
+            line1.replace(6,QString::number(start1 + o * interval1));
 
-        line1.replace(6,QString::number(start1 + o * interval1));
+            for(int p = 0; p < run2; p++){
 
-        for(int p = 0; p < run2; p++){
+                line2.replace(6,QString::number(start2 + p * interval2));
 
-            line2.replace(6,QString::number(start2 + p * interval2));
+                for(int q = 0; q < run3; q++){
 
-            for(int q = 0; q < run3; q++){
+                    line3.replace(6,QString::number(start3 + q * interval3));
 
-                line3.replace(6,QString::number(start3 + q * interval3));
+                    allText = lineList.join("\n");
 
-                qDebug()<<1<<line1.at(6)<<2<<line2.at(6)<<3<<line3.at(6);
+                    //run hpdm
+                    deleteFile.setFileName("hpdata.hpdm");
+                    deleteFile.remove();
+                    if(newFile.open(QIODevice::WriteOnly|QIODevice::Text)){
+                        writeStream.setDevice(&newFile);
+                        writeStream<<allText;
+                        writeStream.flush();
+                        newFile.close();
 
-                //run hpdm
-                //extract interested results from .out file and put into output file
+                        QProcess proc;
+                        proc.setWorkingDirectory("./");
+                        auto Command = QString("cmd.exe");
+                        auto Arguments = QStringList{
+                                QString("/C"),
+                                "RunHPDMFlex.bat"
+                        };
+                        proc.start(Command,Arguments);
+                        proc.waitForFinished(-1);
+
+                        if(proc.exitCode() == 0){
+                            qDebug()<<"run complete"<<o<<p<<q;
+
+                            copyFile.setFileName("out.xlsx");
+                            copyFile.copy("./batchResults/out"
+                                          +QString::number(o)
+                                          +QString::number(p)
+                                          +QString::number(q)
+                                          +".xlsx");
+                        }
+                        else{
+                            qDebug()<<"run faulty"<<o<<p<<q;
+                        }
+                    }
+                    else{
+                        qDebug()<<"fail to write new hpdm file";
+                        return 0;
+                    }
+
+                    //extract interested results from .out file and put into output file
+                }
             }
         }
     }
+    else{
+        return 0;
+    }
+
 
 
 
