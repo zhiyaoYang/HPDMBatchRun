@@ -103,14 +103,10 @@ int main(int argc, char *argv[])
             }
         }
         if(inputLine1 * inputLine2 * inputLine3 == 0){
-//            qDebug()<<"failed to find input line"
-//                   <<inputLine1<<inputLine2<<inputLine3;
             return 0;
         }
         else{
 
-//            qDebug()<<"found input line"
-//                   <<inputLine1<<inputLine2<<inputLine3;
         }
 
         //replace parameter in .hpdm file and run calculation
@@ -151,11 +147,14 @@ int main(int argc, char *argv[])
                             qDebug()<<"run complete"<<o<<p<<q;
 
                             copyFile.setFileName("out.xlsx");
-                            copyFile.copy("./batchResults/out"
+                            if(!copyFile.copy("./batchResults/out"
                                           +QString::number(o)
                                           +QString::number(p)
                                           +QString::number(q)
-                                          +".xlsx");
+                                          +".xlsx")){
+                                    qDebug()<<"copy error";
+                            }
+
                         }
                         else{
                             qDebug()<<"run faulty"<<o<<p<<q;
