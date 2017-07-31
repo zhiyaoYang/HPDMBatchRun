@@ -110,6 +110,8 @@ int main(int argc, char *argv[])
         }
 
         //replace parameter in .hpdm file and run calculation
+
+        int counter = 0;
         for(int o = 0; o < run1; o++){
 
             line1.replace(6,QString::number(start1 + o * interval1));
@@ -121,6 +123,10 @@ int main(int argc, char *argv[])
                 for(int q = 0; q < run3; q++){
 
                     line3.replace(6,QString::number(start3 + q * interval3));
+
+                    lineList.replace(inputLine1,line1.join("\t"));
+                    lineList.replace(inputLine2,line2.join("\t"));
+                    lineList.replace(inputLine3,line3.join("\t"));
 
                     allText = lineList.join("\n");
 
@@ -146,14 +152,16 @@ int main(int argc, char *argv[])
                         if(proc.exitCode() == 0){
                             qDebug()<<"run complete"<<o<<p<<q;
 
-                            copyFile.setFileName("out.xlsx");
+                            copyFile.setFileName("out.xls");
                             if(!copyFile.copy("./batchResults/out"
-                                          +QString::number(o)
-                                          +QString::number(p)
-                                          +QString::number(q)
-                                          +".xlsx")){
+                                          +QString::number(counter)
+                                          +".xls")){
                                     qDebug()<<"copy error";
                             }
+                            else{
+                                counter++;
+                            }
+
 
                         }
                         else{
