@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
     else{
         return 0;
     }
-    inputInfo1 = input1.split(":");
-    inputInfo2 = input2.split(":");
-    inputInfo3 = input3.split(":");
+    inputInfo1 = input1.split(":");//HPBand
+    inputInfo2 = input2.split(":");//SET1
+    inputInfo3 = input3.split(":");//DEADBAND1
 
     qDebug()<<inputInfo1<<inputInfo2<<inputInfo3;
 
